@@ -1,0 +1,52 @@
+DAYANA - CHATBOT AUTONOMO
+==========================
+
+Esta carpeta contiene todo lo necesario para publicar tu chatbot en un link
+propio (tipo https://dayana-tuusuario.vercel.app), sin ninguna marca de
+Claude ni Anthropic visible.
+
+Estructura:
+- public/index.html   -> la app (pantalla de carga + chat)
+- api/chat.js          -> backend seguro que guarda tu clave de API
+- vercel.json           -> configuración de despliegue
+
+PASO 1: Consigue una clave de API
+-----------------------------------
+1. Entra en https://console.anthropic.com
+2. Crea una cuenta (si no tienes) y ve a "API Keys"
+3. Crea una clave nueva y guárdala (empieza por "sk-ant-...")
+   Nota: el uso de la API tiene coste, pero para un chatbot personal
+   suele ser de céntimos por conversación.
+
+PASO 2: Crea una cuenta gratis en Vercel
+-------------------------------------------
+1. Ve a https://vercel.com y regístrate (puedes usar tu email o GitHub)
+
+PASO 3: Sube este proyecto
+------------------------------
+Opción fácil (sin usar la terminal):
+1. Crea una cuenta gratis en https://github.com
+2. Crea un repositorio nuevo (por ejemplo "dayana-chatbot")
+3. Sube estos 3 elementos (public/, api/, vercel.json) arrastrándolos
+   a la web de GitHub ("Add file" > "Upload files")
+4. En Vercel, pulsa "Add New Project", elige "Import Git Repository"
+   y selecciona el repositorio que acabas de crear
+5. Antes de darle a "Deploy", abre la sección "Environment Variables"
+   y añade:
+     Nombre:  ANTHROPIC_API_KEY
+     Valor:   (pega aquí tu clave sk-ant-...)
+6. Pulsa "Deploy" y espera un minuto
+
+PASO 4: Listo
+----------------
+Vercel te dará una URL pública, algo como:
+   https://dayana-chatbot.vercel.app
+
+Esa es tu app, funcionando de forma 100% independiente, sin nada de
+Claude visible. Puedes entrar desde el móvil y "Añadir a pantalla de
+inicio" para tenerla como app normal.
+
+Si más adelante quieres un dominio personalizado (por ejemplo
+dayana.com), Vercel te lo permite conectar desde su panel, en
+"Settings > Domains" (el dominio hay que comprarlo aparte, por
+ejemplo en Namecheap o Google Domains).

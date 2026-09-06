@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#d97757">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dayana">
+<title>Dayana - Chatbot</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f4f4f2;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
+  #app {
+    width: 100%;
+    max-width: 480px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    display: none;
+    flex-direction: column;
+    height: 85vh;
+    overflow: hidden;
+  }
+  header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    font-weight: 600;
+    font-size: 16px;
+    color: #222;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #profile-btn {
+    background: none;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #555;
+    cursor: pointer;
+  }
+  #profile-panel {
+    display: none;
+    padding: 14px 16px;
+    border-bottom: 1px solid #eee;
+    background: #fafaf8;
+  }
+  #profile-panel.open { display: block; }
+  #profile-panel label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+  }
+  #profile-panel textarea {
+    width: 100%;
+    min-height: 70px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+  }
+  #profile-panel textarea:focus { border-color: #d97757; }
+  #profile-save {
+    margin-top: 8px;
+    background: #d97757;
+    color: #fff;
+    border: none;
+    border-radius: 16px;
+    padding: 6px 14px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  #messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+  .user {
+    align-self: flex-end;
+    background: #d97757;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .bot {
+    align-self: flex-start;
+    background: #f0efec;
+    color: #222;
+    border-bottom-left-radius: 4px;
+  }
+  .bot.loading {
+    color: #999;
+    font-style: italic;
+  }
+  form {
+    display: flex;
+    gap: 8px;
+    padding: 12px;
+    border-top: 1px solid #eee;
+  }
+  input[type="text"] {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 20px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 14px;
+  }
+  input[type="text"]:focus {
+    border-color: #d97757;
+  }
+  button {
+    background: #d97757;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+  }
+  #loading-screen {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #d97757;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    transition: opacity 0.4s ease;
+  }
+  #loading-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  #loading-logo {
+    width: 84px;
+    height: 84px;
+    border-radius: 22px;
+    background: #fff;
+    color: #d97757;
+    font-size: 42px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  #loading-name {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    letter-spacing: 0.5px;
+  }
+  #loading-bar-track {
+    width: 200px;
+    height: 6px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #loading-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #fff;
+    border-radius: 4px;
+    transition: width 0.15s ease;
+  }
+  #loading-percent {
+    color: #fff;
+    font-size: 13px;
+    margin-top: 10px;
+    opacity: 0.85;
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div id="loading-logo">D</div>
+  <div id="loading-name">Dayana</div>
+  <div id="loading-bar-track">
+    <div id="loading-bar-fill"></div>
+  </div>
+  <div id="loading-percent">0%</div>
+</div>
+
+<div id="app">
+  <header>
+    Dayana
+    <button id="profile-btn" type="button">Personalizar ✏️</button>
+  </header>
+  <div id="profile-panel">
+    <label for="profile-text">Cuéntame sobre ti (contexto, gustos, profesión, objetivos...). El chatbot usará esto para responder de forma más personalizada.</label>
+    <textarea id="profile-text" placeholder="Ej: Soy diseñador gráfico freelance en Madrid, me interesa el marketing digital y estoy aprendiendo a programar."></textarea>
+    <button id="profile-save" type="button">Guardar</button>
+  </div>
+  <div id="messages"></div>
+  <form id="chat-form">
+    <input type="text" id="user-input" placeholder="Escribe tu pregunta..." autocomplete="off" />
+    <button type="submit" id="send-btn">Enviar</button>
+  </form>
+</div>
+
+<script>
+  (function runLoadingScreen() {
+    const screen = document.getElementById('loading-screen');
+    const fill = document.getElementById('loading-bar-fill');
+    const percentEl = document.getElementById('loading-percent');
+    const appEl = document.getElementById('app');
+
+    let progress = 0;
+    const interval = setInterval(() => {
+      progress += Math.random() * 18 + 6;
+      if (progress >= 100) {
+        progress = 100;
+        clearInterval(interval);
+        fill.style.width = '100%';
+        percentEl.textContent = '100%';
+        setTimeout(() => {
+          screen.classList.add('hidden');
+          appEl.style.display = 'flex';
+          setTimeout(() => screen.remove(), 450);
+        }, 250);
+        return;
+      }
+      fill.style.width = progress + '%';
+      percentEl.textContent = Math.floor(progress) + '%';
+    }, 160);
+  })();
+
+  (function setupPWA() {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 192;
+      canvas.height = 192;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#d97757';
+      ctx.fillRect(0, 0, 192, 192);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 110px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('D', 96, 104);
+      const iconUrl = canvas.toDataURL('image/png');
+
+      const appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      appleIcon.href = iconUrl;
+      document.head.appendChild(appleIcon);
+
+      const favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = iconUrl;
+      document.head.appendChild(favicon);
+
+      const manifest = {
+        name: 'Dayana',
+        short_name: 'Dayana',
+        start_url: '.',
+        display: 'standalone',
+        background_color: '#f4f4f2',
+        theme_color: '#d97757',
+        icons: [{ src: iconUrl, sizes: '192x192', type: 'image/png' }]
+      };
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      const manifestLink = document.createElement('link');
+      manifestLink.rel = 'manifest';
+      manifestLink.href = URL.createObjectURL(manifestBlob);
+      document.head.appendChild(manifestLink);
+    } catch (e) { /* PWA setup opcional, no crítico */ }
+  })();
+
+  const messagesEl = document.getElementById('messages');
+  const form = document.getElementById('chat-form');
+  const input = document.getElementById('user-input');
+  const sendBtn = document.getElementById('send-btn');
+  const profileBtn = document.getElementById('profile-btn');
+  const profilePanel = document.getElementById('profile-panel');
+  const profileText = document.getElementById('profile-text');
+  const profileSave = document.getElementById('profile-save');
+
+  let history = [];
+  let userProfile = '';
+
+  try {
+    const saved = localStorage.getItem('chatbot_profile');
+    if (saved) {
+      userProfile = saved;
+      profileText.value = saved;
+    }
+  } catch (e) { /* localStorage no disponible */ }
+
+  profileBtn.addEventListener('click', () => {
+    profilePanel.classList.toggle('open');
+  });
+
+  profileSave.addEventListener('click', () => {
+    userProfile = profileText.value.trim();
+    try { localStorage.setItem('chatbot_profile', userProfile); } catch (e) {}
+    profilePanel.classList.remove('open');
+    addMessage('Perfil actualizado. A partir de ahora responderé teniendo esto en cuenta.', 'bot');
+  });
+
+  function addMessage(text, sender) {
+    const div = document.createElement('div');
+    div.className = 'msg ' + sender;
+    div.textContent = text;
+    messagesEl.appendChild(div);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return div;
+  }
+
+  addMessage('¡Hola! Soy Dayana. Pregúntame lo que quieras.', 'bot');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    history.push({ role: 'user', content: text });
+    input.value = '';
+    sendBtn.disabled = true;
+
+    const loadingEl = addMessage('Pensando...', 'bot loading');
+
+    const basePersona = "Eres Dayana, una IA conversacional creada por Manu, pensada como una versión ligera y cercana de un asistente estilo Claude: útil, curiosa, con sentido del humor sutil y capaz de ayudar con casi cualquier pregunta (dudas generales, consejos, explicaciones, ideas, código sencillo, conversación...). Si te preguntan quién eres o quién te creó, respondes con naturalidad que eres Dayana y que tu creador es Manu. Sé cercana y natural, evita sonar robótica, y si no sabes algo con certeza dilo con honestidad en vez de inventar.";
+
+    const systemPrompt = userProfile
+      ? `${basePersona} Aquí tienes información sobre el usuario que debes usar para personalizar tus respuestas cuando sea relevante (adapta ejemplos, tono y recomendaciones a su contexto, pero no la repitas literalmente si no viene a cuento): ${userProfile}`
+      : basePersona;
+
+    async function callApi() {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          system: systemPrompt,
+          messages: history
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || data.error) {
+        const errMsg = data.error && data.error.message ? data.error.message : (data.error || `Error HTTP ${response.status}`);
+        throw new Error(errMsg);
+      }
+      const textBlock = Array.isArray(data.content) ? data.content.find(b => b.type === "text") : null;
+      if (!textBlock) throw new Error("Respuesta sin contenido de texto");
+      return textBlock.text;
+    }
+
+    try {
+      let reply;
+      try {
+        reply = await callApi();
+      } catch (firstErr) {
+        // Reintento automático una vez (cubre fallos puntuales de red o sobrecarga)
+        await new Promise(r => setTimeout(r, 800));
+        reply = await callApi();
+      }
+
+      loadingEl.remove();
+      addMessage(reply, 'bot');
+      history.push({ role: 'assistant', content: reply });
+    } catch (err) {
+      loadingEl.remove();
+      addMessage('Hubo un error al conectar (' + err.message + '). Vuelve a intentarlo.', 'bot');
+      history.pop();
+      console.error(err);
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  });
+</script>
+
+</body>
+</html>
